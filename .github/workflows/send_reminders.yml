@@ -1,0 +1,27 @@
+name: Send appointment reminders
+
+on:
+  schedule:
+    # Runs daily at 07:00 UTC (adjust to your preferred time)
+    - cron: '0 7 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reminders endpoint
+        env:
+          REMINDERS_URL: ${{ secrets.REMINDERS_URL }}
+          REMINDER_TOKEN: ${{ secrets.REMINDER_TOKEN }}
+        run: |
+          if [ -z "$REMINDERS_URL" ]; then
+            echo "REMINDERS_URL secret is not set. Aborting."; exit 1;
+          fi
+          echo "Calling reminders endpoint..."
+          HTTP_STATUS=$(curl -s -o /tmp/reminders_response.json -w "%{http_code}" -X POST "$REMINDERS_URL" -H "x-reminder-token: $REMINDER_TOKEN")
+          echo "HTTP status: $HTTP_STATUS"
+          echo "Response:"; cat /tmp/reminders_response.json
+          if [ "$HTTP_STATUS" -ge 400 ]; then
+            echo "Reminders endpoint returned error"; exit 1;
+          fi

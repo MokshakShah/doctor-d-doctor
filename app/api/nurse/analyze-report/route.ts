@@ -69,9 +69,24 @@ Provide a clear, structured summary that a doctor can quickly review.`;
       },
     ]);
 
-    const analysisText = response.content.parts
-      .map((part: any) => (typeof part.text === "string" ? part.text : ""))
-      .join("");
+    // Handle response properly
+    let analysisText = "";
+    
+    console.log("Gemini response:", JSON.stringify(response, null, 2));
+    
+    if (response.response && response.response.candidates && response.response.candidates.length > 0) {
+      const candidate = response.response.candidates[0];
+      if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+        analysisText = candidate.content.parts
+          .map((part: any) => part.text || "")
+          .join("");
+      }
+    }
+
+    if (!analysisText) {
+      console.error("Could not extract analysis text from response");
+      throw new Error("No analysis generated from Gemini");
+    }
 
     // Save analysis to MongoDB
     const client = await connectToDB();

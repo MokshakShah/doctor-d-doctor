@@ -105,11 +105,10 @@ export default function PatientPage() {
         };
         const branchShort = branchMap[showVisit.location] || showVisit.location;
         setReportsLoading(true);
-        fetch(`/api/nurse/report?visitNo=${encodeURIComponent(showVisit.visitNo)}&branch=${encodeURIComponent(branchShort)}`)
+        fetch(`/api/nurse/analyze-report?visitNo=${encodeURIComponent(showVisit.visitNo)}&branch=${encodeURIComponent(branchShort)}`)
           .then(res => res.json())
           .then(data => {
-            setReportUrls(data.reports || []);
-            setReportNote(data.reportNote || null);
+            setReportUrls(data.analyses || []);
           })
           .finally(() => setReportsLoading(false));
       } else {
@@ -228,35 +227,31 @@ export default function PatientPage() {
                         </div>
                         {/* Reports Card */}
                         <div className="w-full max-w-xs bg-purple-50 rounded-xl p-4 flex flex-col items-center border border-purple-200 shadow">
-                          <div className="font-semibold text-purple-700 mb-2">Reports (PDF)</div>
+                          <div className="font-semibold text-purple-700 mb-2">📋 Report Analysis</div>
                           {reportsLoading ? (
                             <div className="flex items-center justify-center h-24">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
                             </div>
                           ) : reportUrls.length > 0 ? (
-                            <div className="flex flex-col gap-2 w-full">
-                              {reportUrls.map((url, idx) => (
-                                <div key={idx} className="flex flex-col items-center w-full">
-                                  <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-700 underline text-base font-semibold py-2"
-                                  >
-                                    Report {idx + 1}
-                                  </a>
+                            <div className="flex flex-col gap-3 w-full">
+                              {reportUrls.map((analysis: any, idx) => (
+                                <div key={idx} className="bg-white border border-purple-200 rounded-lg p-3">
+                                  <div className="text-xs font-semibold text-purple-600 mb-2">
+                                    {new Date(analysis.uploadedAt).toLocaleDateString()} - {analysis.fileName}
+                                  </div>
+                                  <div className="text-sm text-purple-900 whitespace-pre-wrap max-h-48 overflow-y-auto bg-purple-50 p-2 rounded">
+                                    {analysis.analysis}
+                                  </div>
+                                  {analysis.note && (
+                                    <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-purple-200">
+                                      <strong>Note:</strong> {analysis.note}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-gray-400 italic">No reports uploaded</div>
-                          )}
-                          {/* Show nurse note if present */}
-                          {reportNote && (
-                            <div className="mt-4 w-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded">
-                              <div className="font-semibold mb-1">Last Time Reports:</div>
-                              <div className="whitespace-pre-line">{reportNote}</div>
-                            </div>
+                            <div className="text-gray-400 italic">No reports analyzed yet</div>
                           )}
                         </div>
                         {/* Modal for full-size prescription image preview */}

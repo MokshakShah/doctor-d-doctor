@@ -25,17 +25,17 @@ export async function POST(req: NextRequest) {
     const db = client.db(dbName);
     const cloudinaryReport = db.collection(collectionName);
     const now = new Date();
-    // Insert each report as a separate document
-    const docs = reports.map((url: string) => ({ visitNo, branch, url, uploadedAt: now }));
+    // Insert each report as a single document with note included
+    const docs = reports.map((url: string) => {
+      const doc: any = { visitNo, branch, url, uploadedAt: now };
+      // Add note to the same document if provided
+      if (reportNote && reportNote.trim()) {
+        doc.note = reportNote.trim();
+        doc.noteAddedAt = now;
+      }
+      return doc;
+    });
     await cloudinaryReport.insertMany(docs);
-    // Store or update reportNote for this visitNo+branch
-    if (reportNote && reportNote.trim()) {
-      await cloudinaryReport.updateOne(
-        { visitNo, branch, note: { $exists: true } },
-        { $set: { note: reportNote, noteUploadedAt: now } },
-        { upsert: true }
-      );
-    }
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to save report reference" }, { status: 500 });
@@ -60,10 +60,9 @@ export async function GET(req: NextRequest) {
       .sort({ uploadedAt: -1 })
       .limit(3)
       .toArray();
-    // Get the note if exists
-    const noteDoc = await cloudinaryReport.findOne({ visitNo, branch, note: { $exists: true } });
-    // Return URLs and note
-    return NextResponse.json({ reports: reports.map(r => r.url), reportNote: noteDoc?.note || null });
+    // Notes are now embedded in each report document
+    // Return URLs and notes
+    return NextResponse.json({ reports: reports.map(r => ({ url: r.url, note: r.note || null })) });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
   }

@@ -25,19 +25,20 @@ export async function POST(req: NextRequest) {
     const db = client.db(dbName);
     const cloudinary = db.collection(collectionName);
     const now = new Date();
-    // Insert only new images (prevent duplicates)
+    // Consolidate images and note into single documents
     let inserted = 0;
     for (const url of images) {
       const exists = await cloudinary.findOne({ visitNo, branch, url });
       if (!exists) {
-        await cloudinary.insertOne({ visitNo, branch, url, uploadedAt: now });
+        const doc: any = { visitNo, branch, url, uploadedAt: now };
+        // Add note to the same document if provided
+        if (note && note.trim().length > 0) {
+          doc.note = note.trim();
+          doc.noteAddedAt = now;
+        }
+        await cloudinary.insertOne(doc);
         inserted++;
       }
-    }
-    // Save optional prescription note to a separate collection
-    if (note && note.trim().length > 0) {
-      const meta = db.collection('prescription_meta');
-      await meta.insertOne({ visitNo, branch, note: note.trim(), createdAt: now });
     }
 
     // If nextAppointmentDate provided, create a followup document for reminders

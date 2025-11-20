@@ -11,9 +11,7 @@ export default function AddReport() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [reportNote, setReportNote] = useState("");
-
-  const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
-  const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
+  const [analysis, setAnalysis] = useState("");
 
   const branchOptions = [
     { label: "Borivali", value: "Bor" },
@@ -29,49 +27,46 @@ export default function AddReport() {
     e.preventDefault();
     setError("");
     setSuccess(false);
+    setAnalysis("");
+    
     if (!visitNo || !branch || !files || files.length === 0) {
       setError("Please enter a visit number, select a branch, and select a PDF report.");
       return;
     }
+    
     setUploading(true);
     try {
-      const uploadedUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
         formData.append("file", files[i]);
-        formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-        // Upload as raw for PDF
-        formData.append("resource_type", "raw");
-        const branchShort = branch;
-        const publicId = `R-${visitNo}_${branchShort}_${Date.now()}`;
-        formData.append("public_id", publicId);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`, {
+        formData.append("visitNo", visitNo);
+        formData.append("branch", branch);
+        formData.append("reportNote", reportNote);
+
+        // Send to Gemini analysis endpoint
+        const res = await fetch("/api/nurse/analyze-report", {
           method: "POST",
           body: formData,
         });
+        
         const data = await res.json();
-        if (data.secure_url) {
-          uploadedUrls.push(data.secure_url);
-        } else {
-          throw new Error("Upload failed");
+        if (!res.ok) {
+          throw new Error(data.error || "Analysis failed");
         }
+        
+        setAnalysis(data.analysis);
       }
-      // Save URLs to backend with visitNo and branch
-      const saveRes = await fetch("/api/nurse/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visitNo, branch, reports: uploadedUrls, reportNote }),
-      });
-      if (!saveRes.ok) throw new Error("Failed to save report reference");
+      
       setSuccess(true);
       setVisitNo("");
       setBranch("");
       setFiles(null);
       setReportNote("");
+      
       setTimeout(() => {
         setSuccess(false);
         router.refresh();
-      }, 1200);
+      }, 2000);
     } catch (err: any) {
       setError(err.message || "Upload failed");
     } finally {
@@ -123,10 +118,16 @@ export default function AddReport() {
             className="w-full bg-blue-700 text-white py-2 rounded-lg font-semibold mt-2"
             disabled={uploading}
           >
-            {uploading ? "Uploading..." : "Upload"}
+            {uploading ? "Analyzing with Gemini..." : "Upload & Analyze"}
           </button>
-          {success && <div className="text-green-600 text-center">Reports uploaded successfully!</div>}
+          {success && <div className="text-green-600 text-center font-semibold">✓ Report analyzed successfully!</div>}
           {error && <div className="text-red-500 text-center">{error}</div>}
+          {analysis && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-300 rounded-lg max-h-96 overflow-y-auto">
+              <div className="font-semibold text-blue-900 mb-2">AI Analysis Summary:</div>
+              <div className="text-sm text-blue-800 whitespace-pre-wrap">{analysis}</div>
+            </div>
+          )}
         </form>
         <button
           className="mt-4 w-full bg-gray-200 text-blue-700 py-2 rounded-lg font-semibold"

@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const uri = 'mongodb://127.0.0.1:27017';
+const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'DoctorD';
 const collectionName = 'Nurse_register';
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';

@@ -3,6 +3,33 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { User, Venus, Mars, Calendar, FileText } from "lucide-react";
 
+interface PatientVisit {
+  date?: string;
+  appointments?: Array<{ date?: string }>;
+  visitNo?: string;
+  location?: string;
+  age?: string;
+  gender?: string;
+  medicalConditions?: string;
+  allergy?: string;
+  familyHistory?: string;
+  name?: string;
+}
+
+interface Patient {
+  name: string;
+  visits?: PatientVisit[];
+  locations?: string[];
+  [key: string]: unknown;
+}
+
+interface ReportAnalysis {
+  analysis: string;
+  fileName: string;
+  uploadedAt: string;
+  note?: string;
+}
+
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -15,13 +42,12 @@ export default function PatientPage() {
   const router = useRouter();
   const name = searchParams.get("name") || "";
   const [loading, setLoading] = useState(true);
-  const [patients, setPatients] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [prescriptionImages, setPrescriptionImages] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImg, setModalImg] = useState<string | null>(null);
-  const [reportUrls, setReportUrls] = useState<string[]>([]);
+  const [reportUrls, setReportUrls] = useState<ReportAnalysis[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
-  const [reportNote, setReportNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!name) {
@@ -38,12 +64,14 @@ export default function PatientPage() {
   }, [name, router]);
 
   // Helper to get the latest past visit (by date)
-  function getLatestPastVisit(visits: any[]) {
+  function getLatestPastVisit(visits: PatientVisit[] | undefined): PatientVisit | null {
     if (!visits || visits.length === 0) return null;
     const now = new Date();
     // Filter only visits with a date in the past
     const pastVisits = visits.filter(v => {
-      const d = new Date(v.appointments?.[0]?.date);
+      const dateStr = v.appointments?.[0]?.date;
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
       return d <= now;
     });
     if (pastVisits.length === 0) return null;
@@ -113,7 +141,6 @@ export default function PatientPage() {
           .finally(() => setReportsLoading(false));
       } else {
         setReportUrls([]);
-        setReportNote(null);
       }
     }
   }, [loading, patients]);
@@ -160,7 +187,7 @@ export default function PatientPage() {
                       <div>
                         <div className="text-xl font-bold text-blue-800">{patient.name}</div>
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {patient.locations.map((loc: string) => (
+                          {(patient.locations || []).map((loc: string) => (
                             <span key={loc} className="text-xs bg-blue-100 text-blue-700 rounded px-2 py-1 font-semibold">
                               {loc}
                             </span>

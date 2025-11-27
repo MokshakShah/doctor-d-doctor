@@ -49,13 +49,13 @@ export async function POST(req: NextRequest) {
     // Call Gemini API to analyze the report
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `You are a medical report analyzer. Analyze this medical report PDF and provide:
-1. Key findings (main diagnoses/abnormalities)
-2. Test values and their significance
-3. Recommendations from the report
-4. Any critical alerts or urgent findings
+    const prompt = `Please analyze this document and provide a comprehensive summary:
+1. Main content/findings
+2. Key data points or values mentioned
+3. Recommendations or next steps
+4. Any important notes or alerts
 
-Provide a clear, structured summary that a doctor can quickly review.`;
+Provide a clear, structured summary.`;
 
     const response = await model.generateContent([
       {

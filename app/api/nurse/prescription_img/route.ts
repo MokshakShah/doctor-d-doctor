@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     for (const url of images) {
       const exists = await cloudinary.findOne({ visitNo, branch, url });
       if (!exists) {
-        const doc: any = { visitNo, branch, url, uploadedAt: now };
+        const doc: Record<string, unknown> = { visitNo, branch, url, uploadedAt: now };
         // Add note to the same document if provided
         if (note && note.trim().length > 0) {
           doc.note = note.trim();
@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
       }
     }
     return NextResponse.json({ success: true, inserted });
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to save image reference" }, { status: 500 });
   }
 }
@@ -94,8 +95,9 @@ export async function GET(req: NextRequest) {
       .limit(3)
       .toArray();
     // Return only the URLs
-    return NextResponse.json({ images: images.map(img => img.url) });
-  } catch (error) {
+    return NextResponse.json({ images: images.map((img: Record<string, unknown>) => img.url) });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to fetch images" }, { status: 500 });
   }
 } 

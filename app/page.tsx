@@ -79,6 +79,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || 'Login failed');
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError('Network error');
     } finally {
@@ -245,6 +246,7 @@ export default function LoginPage() {
                       } else {
                         setForgotError(data.error || 'Failed to change password');
                       }
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     } catch (err) {
                       setForgotError('Server error');
                     }

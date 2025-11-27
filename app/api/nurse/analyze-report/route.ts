@@ -78,7 +78,7 @@ Provide a clear, structured summary.`;
       const candidate = response.response.candidates[0];
       if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
         analysisText = candidate.content.parts
-          .map((part: any) => part.text || "")
+          .map((part: { text?: string }) => part.text || "")
           .join("");
       }
     }
@@ -109,7 +109,8 @@ Provide a clear, structured summary.`;
       analysis: analysisText,
       id: result.insertedId,
     });
-  } catch (error: any) {
+  } catch (_error: unknown) {
+    const error = _error as Error;
     console.error("Report analysis error:", error);
     return NextResponse.json(
       { error: error.message || "Analysis failed" },
@@ -144,7 +145,8 @@ export async function GET(req: NextRequest) {
       .toArray();
 
     return NextResponse.json({ analyses });
-  } catch (error: any) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error: unknown) {
     return NextResponse.json(
       { error: "Failed to fetch analyses" },
       { status: 500 }

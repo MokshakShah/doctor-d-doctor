@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MongoClient, ObjectId } from 'mongodb';
+import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'Patient';
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     
     // Flatten appointments for the date and get payment info
     const appointments = await Promise.all(results.map(async (doc) => {
-      const appt = (doc.appointments || []).find((a: any) => a.date === date) || {};
+      const appt = (doc.appointments || []).find((a: { date: string }) => a.date === date) || {};
       
       // Default to no payment info
       let payment = 'Payment not recorded';
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       // and finally fall back to the most recent record for the visitNo.
       if (doc.visitNo) {
         try {
-          let paymentRecord: any = null;
+          let paymentRecord: Record<string, unknown> | null = null;
 
           // preferred: exact match for this appointment
           paymentRecord = await paymentRecords.findOne({ visitNo: doc.visitNo, date: date, time: appt.time });
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
             );
           }
 
-          if (paymentRecord && paymentRecord.payment && paymentRecord.payment !== 'pending') {
+          if (paymentRecord && paymentRecord.payment && typeof paymentRecord.payment === 'string' && paymentRecord.payment !== 'pending') {
             payment = paymentRecord.payment;
           } else if (paymentRecord && paymentRecord.payment === 'pending') {
             payment = 'Payment pending';

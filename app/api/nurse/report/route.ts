@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     // Insert each report as a single document with note included
     const docs = reports.map((url: string) => {
-      const doc: any = { visitNo, branch, url, uploadedAt: now };
+      const doc: Record<string, unknown> = { visitNo, branch, url, uploadedAt: now };
       // Add note to the same document if provided
       if (reportNote && reportNote.trim()) {
         doc.note = reportNote.trim();
@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     });
     await cloudinaryReport.insertMany(docs);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to save report reference" }, { status: 500 });
   }
 }
@@ -62,8 +63,9 @@ export async function GET(req: NextRequest) {
       .toArray();
     // Notes are now embedded in each report document
     // Return URLs and notes
-    return NextResponse.json({ reports: reports.map(r => ({ url: r.url, note: r.note || null })) });
-  } catch (error) {
+    return NextResponse.json({ reports: reports.map((r: Record<string, unknown>) => ({ url: r.url, note: r.note || null })) });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
   }
 } 

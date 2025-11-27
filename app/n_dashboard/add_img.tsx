@@ -11,8 +11,8 @@ export default function AddPrescriptionImage() {
   const [error, setError] = useState("");
 
   // TODO: Replace with your Cloudinary upload preset and cloud name
-  const CLOUDINARY_UPLOAD_PRESET = "your_upload_preset";
-  const CLOUDINARY_CLOUD_NAME = "your_cloud_name";
+  const CLOUDINARY_UPLOAD_PRESET: string = "your_upload_preset";
+  const CLOUDINARY_CLOUD_NAME: string = "your_cloud_name";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFiles(e.target.files);
@@ -54,7 +54,8 @@ export default function AddPrescriptionImage() {
       setSuccess(true);
       setVisitNo("");
       setFiles(null);
-    } catch (err: any) {
+    } catch (_err: unknown) {
+      const err = _err as Error & { message?: string };
       setError(err.message || "Upload failed");
     } finally {
       setUploading(false);

@@ -49,12 +49,14 @@ export default function AddReport() {
           body: formData,
         });
         
-        const data = await res.json();
+        const data: Record<string, unknown> = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || "Analysis failed");
+          throw new Error(typeof data.error === 'string' ? data.error : "Analysis failed");
         }
         
-        setAnalysis(data.analysis);
+        if (typeof data.analysis === 'string') {
+          setAnalysis(data.analysis);
+        }
       }
       
       setSuccess(true);
@@ -67,7 +69,8 @@ export default function AddReport() {
         setSuccess(false);
         router.refresh();
       }, 2000);
-    } catch (err: any) {
+    } catch (_err: unknown) {
+      const err = _err as Error & { message?: string };
       setError(err.message || "Upload failed");
     } finally {
       setUploading(false);

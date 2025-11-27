@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { User, Venus, Mars, Calendar, FileText } from "lucide-react";
 
 interface PatientVisit {
@@ -37,7 +38,7 @@ function getInitials(name: string) {
     .join("");
 }
 
-export default function PatientPage() {
+function PatientPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const name = searchParams.get("name") || "";
@@ -89,7 +90,7 @@ export default function PatientPage() {
       const latestVisit = getLatestPastVisit(patient.visits);
       let showVisit = latestVisit;
       if (!latestVisit && patient.visits && patient.visits.length > 0) {
-        showVisit = patient.visits.reduce((earliest: any, curr: any) => {
+        showVisit = patient.visits.reduce((earliest: PatientVisit, curr: PatientVisit) => {
           const currDate = new Date(curr.appointments?.[0]?.date || 0);
           const earliestDate = new Date(earliest.appointments?.[0]?.date || 0);
           return currDate < earliestDate ? curr : earliest;
@@ -119,7 +120,7 @@ export default function PatientPage() {
       const latestVisit = getLatestPastVisit(patient.visits);
       let showVisit = latestVisit;
       if (!latestVisit && patient.visits && patient.visits.length > 0) {
-        showVisit = patient.visits.reduce((earliest: any, curr: any) => {
+        showVisit = patient.visits.reduce((earliest: PatientVisit, curr: PatientVisit) => {
           const currDate = new Date(curr.appointments?.[0]?.date || 0);
           const earliestDate = new Date(earliest.appointments?.[0]?.date || 0);
           return currDate < earliestDate ? curr : earliest;
@@ -169,7 +170,7 @@ export default function PatientPage() {
               let showVisit = latestVisit;
               let isFirstVisit = false;
               if (!latestVisit && patient.visits && patient.visits.length > 0) {
-                showVisit = patient.visits.reduce((earliest: any, curr: any) => {
+                showVisit = patient.visits.reduce((earliest: PatientVisit, curr: PatientVisit) => {
                   const currDate = new Date(curr.appointments?.[0]?.date || 0);
                   const earliestDate = new Date(earliest.appointments?.[0]?.date || 0);
                   return currDate < earliestDate ? curr : earliest;
@@ -239,10 +240,12 @@ export default function PatientPage() {
                           {prescriptionImages.length > 0 ? (
                             <div className="flex flex-col gap-2">
                               {prescriptionImages.map((url, idx) => (
-                                <img
+                                <Image
                                   key={idx}
                                   src={url}
                                   alt={`Prescription ${idx + 1}`}
+                                  width={200}
+                                  height={200}
                                   className="rounded-lg max-h-48 object-contain border cursor-pointer"
                                   onClick={() => { setModalImg(url); setModalOpen(true); }}
                                 />
@@ -261,7 +264,7 @@ export default function PatientPage() {
                             </div>
                           ) : reportUrls.length > 0 ? (
                             <div className="flex flex-col gap-3 w-full">
-                              {reportUrls.map((analysis: any, idx) => (
+                              {reportUrls.map((analysis: ReportAnalysis, idx) => (
                                 <div key={idx} className="bg-white border border-purple-200 rounded-lg p-3">
                                   <div className="text-xs font-semibold text-purple-600 mb-2">
                                     {new Date(analysis.uploadedAt).toLocaleDateString()} - {analysis.fileName}
@@ -298,9 +301,11 @@ export default function PatientPage() {
                               >
                                 ×
                               </button>
-                              <img
-                                src={modalImg}
+                              <Image
+                                src={modalImg || ""}
                                 alt="Prescription Preview"
+                                width={800}
+                                height={600}
                                 className="rounded-lg object-contain max-h-[80vh] max-w-full"
                               />
                             </div>
@@ -320,5 +325,13 @@ export default function PatientPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PatientPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <PatientPageContent />
+    </Suspense>
   );
 } 

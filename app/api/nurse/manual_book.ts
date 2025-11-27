@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MongoClient } from 'mongodb';
 
-const uri = 'mongodb://127.0.0.1:27017';
+const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'Patient';
 const locationCollections = {
   Bhayander: 'Patients_history_bhayander',
@@ -28,7 +28,7 @@ function generateVisitNo(lastNo: string | null) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const branch = body.branch;
+  const branch = body.branch as keyof typeof locationCollections;
   const collectionName = locationCollections[branch];
   if (!collectionName) {
     return NextResponse.json({ error: 'Invalid branch' }, { status: 400 });

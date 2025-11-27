@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const fromNumber = process.env.TWILIO_FROM;
 
-    const results: any[] = [];
+    const results: Record<string, unknown>[] = [];
 
     for (const f of due) {
       const to = f.contact;

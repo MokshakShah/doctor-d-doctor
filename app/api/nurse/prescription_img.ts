@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     prescriptionImages[key].push(...images);
     // In real implementation, save to DB here
     return NextResponse.json({ success: true });
-  } catch (err) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_err) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

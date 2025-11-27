@@ -4,7 +4,8 @@ import { MongoClient } from 'mongodb';
 const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'Patient';
 
-export async function POST(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_req: NextRequest) {
   try {
     const client = new MongoClient(uri);
     await client.connect();
@@ -29,8 +30,8 @@ export async function POST(req: NextRequest) {
     
     // For each duplicate visitNo, remove pending records if non-pending ones exist
     for (const group of duplicateVisitNos) {
-      const hasPending = group.records.some((r: any) => r.payment === 'pending');
-      const hasNonPending = group.records.some((r: any) => r.payment !== 'pending');
+      const hasPending = group.records.some((r: { _id: string; payment: string }) => r.payment === 'pending');
+      const hasNonPending = group.records.some((r: { _id: string; payment: string }) => r.payment !== 'pending');
       
       if (hasPending && hasNonPending) {
         // Remove all pending records for this visitNo

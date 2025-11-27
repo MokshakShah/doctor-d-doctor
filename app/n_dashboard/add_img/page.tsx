@@ -69,7 +69,7 @@ export default function AddPrescriptionImage() {
       if (!nextDateStr && nextAppointmentMonths > 0) {
         // safer month addition without mutating now
         const now = new Date();
-        let candidate = new Date(now.getFullYear(), now.getMonth() + nextAppointmentMonths, now.getDate());
+        const candidate = new Date(now.getFullYear(), now.getMonth() + nextAppointmentMonths, now.getDate());
 
         // Normalize branch short code to human branch name used in closed_days
         const branchNameMap: Record<string, string> = { Bor: 'Borivali', Mal: 'Malad', Bhy: 'Bhayander' };
@@ -80,21 +80,21 @@ export default function AddPrescriptionImage() {
           const res = await fetch('/api/nurse/closed_days');
           if (res.ok) {
             const j = await res.json();
-            const closedArr: any[] = j.closedDays || [];
+            const closedArr: Record<string, unknown>[] = j.closedDays || [];
             const isCandidateClosed = (d: Date) => {
               const t = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
               // Skip Sundays
               if (d.getDay() === 0) return true;
               for (const c of closedArr) {
-                const branchVal = c.branch || '';
+                const branchVal = c.branch as string || '';
                 if (!(branchVal === 'All' || branchVal === branchFull)) continue;
                 if (c.date) {
-                  const cd = new Date(c.date);
+                  const cd = new Date(c.date as string);
                   const cdDay = new Date(cd.getFullYear(), cd.getMonth(), cd.getDate()).getTime();
                   if (cdDay === t) return true;
                 } else if (c.dateFrom) {
-                  const from = new Date(c.dateFrom);
-                  const to = c.dateTo ? new Date(c.dateTo) : new Date(c.dateFrom);
+                  const from = new Date(c.dateFrom as string);
+                  const to = c.dateTo ? new Date(c.dateTo as string) : new Date(c.dateFrom as string);
                   const fromDay = new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime();
                   const toDay = new Date(to.getFullYear(), to.getMonth(), to.getDate()).getTime();
                   if (t >= fromDay && t <= toDay) return true;
@@ -133,7 +133,8 @@ export default function AddPrescriptionImage() {
       setNote("");
       setNextAppointmentMonths(0);
       setNextAppointmentDate("");
-    } catch (err: any) {
+    } catch (_err: unknown) {
+      const err = _err as Error & { message?: string };
       setError(err.message || "Upload failed");
     } finally {
       setUploading(false);

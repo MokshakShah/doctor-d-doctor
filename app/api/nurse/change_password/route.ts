@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MongoClient, ObjectId } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   try {
     let email = null;
     let payload = null;
-    let auth = req.headers.get('authorization');
+    const auth = req.headers.get('authorization');
     const body = await req.json();
     if (body.email) {
       // Forgot password flow: use email from body
@@ -30,11 +30,11 @@ export async function POST(req: NextRequest) {
       // Authenticated flow: use JWT
       const token = auth.slice(7);
       try {
-        payload = jwt.verify(token, JWT_SECRET);
+        payload = jwt.verify(token, JWT_SECRET) as { email?: string; role?: string };
       } catch {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
       }
-      if (!payload || !payload.email || payload.role !== 'Nurse') {
+      if (!payload || typeof payload === 'string' || !payload.email || payload.role !== 'Nurse') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       email = payload.email;
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password change locked for 24 hours.', lockedUntil: user.passwordChangeLockedUntil }, { status: 403 });
     }
     // Check attempts
-    if (user.passwordChangeLastAttempt && (now - user.passwordChangeLastAttempt) < 10 * 60 * 1000) {
+    if (user.passwordChangeLastAttempt && (now.getTime() - new Date(user.passwordChangeLastAttempt as Date | string | number).getTime()) < 10 * 60 * 1000) {
       if (user.passwordChangeAttempts >= 3) {
         // Lock for 24 hours
         await nurses.updateOne(
@@ -94,7 +94,8 @@ export async function POST(req: NextRequest) {
       }
     );
     return NextResponse.json({ success: true });
-  } catch (err) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_err) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 } 

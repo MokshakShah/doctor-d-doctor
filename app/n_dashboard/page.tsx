@@ -31,7 +31,7 @@ export default function NurseDashboard() {
     }
     return new Date().toISOString().slice(0, 10);
   });
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -45,10 +45,9 @@ export default function NurseDashboard() {
   const [closedToDate, setClosedToDate] = useState(new Date().toISOString().slice(0,10));
   const [closedBranch, setClosedBranch] = useState('All');
   const [closedReason, setClosedReason] = useState('Doctor on leave');
-  const [closedDaysList, setClosedDaysList] = useState<any[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [closedDaysList, setClosedDaysList] = useState<Record<string, unknown>[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmingAppointment, setConfirmingAppointment] = useState<any>(null);
+  const [confirmingAppointment, setConfirmingAppointment] = useState<Record<string, unknown> | null>(null);
   const [confirmingAction, setConfirmingAction] = useState<'collect' | 'uncollect' | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -75,12 +74,11 @@ export default function NurseDashboard() {
 
   useEffect(() => {
     fetchAppointments();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branch, date, page]);
 
   useEffect(() => {
     if (showClosedDaysModal) fetchClosedDays();
-    // eslint-disable-next-line
   }, [showClosedDaysModal]);
 
   const fetchAppointments = async () => {
@@ -105,7 +103,7 @@ export default function NurseDashboard() {
 
   const handleAddClosedDay = async () => {
     try {
-      const payload: any = { branch: closedBranch, reason: closedReason };
+      const payload: Record<string, string> = { branch: closedBranch, reason: closedReason };
       // send date range
       payload.dateFrom = closedFromDate;
       payload.dateTo = closedToDate || closedFromDate;
@@ -142,15 +140,10 @@ export default function NurseDashboard() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    // TODO: Implement status update API call
-    setAppointments((prev) => prev.map(appt => appt.id === id ? { ...appt, status: newStatus } : appt));
-  };
-
-  const handleCashCollectionClick = (appt: any) => {
+  const handleCashCollectionClick = (appt: Record<string, unknown>) => {
     // default action when clicking on cash item: collect if pending, uncollect if already collected
     setConfirmingAppointment(appt);
-    setConfirmingAction(appt.payment === 'cash_collected' ? 'uncollect' : 'collect');
+    setConfirmingAction((appt.payment as string) === 'cash_collected' ? 'uncollect' : 'collect');
     setShowConfirmModal(true);
   };
 
@@ -217,10 +210,10 @@ export default function NurseDashboard() {
               <>
                 <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
                   <p className="text-sm text-gray-700 mb-2">
-                    <strong>Patient:</strong> {confirmingAppointment.name}
+                    <strong>Patient:</strong> {String(confirmingAppointment.name)}
                   </p>
                   <p className="text-sm text-gray-700 mb-2">
-                    <strong>Time:</strong> {confirmingAppointment.time}
+                    <strong>Time:</strong> {String(confirmingAppointment.time)}
                   </p>
                   <p className="text-sm text-red-700 font-semibold mt-3">
                     ⚠️ This action is permanent. Once changed, the status will be updated in the system.
@@ -314,26 +307,26 @@ export default function NurseDashboard() {
                 ) : appointments.length === 0 ? (
                   <tr><td colSpan={4} className="text-center py-8 text-gray-400">No appointments found.</td></tr>
                 ) : appointments.map(appt => (
-                  <tr key={appt.id} className="border-b last:border-0">
-                    <td className="py-2 pr-2 font-mono">{appt.time}</td>
-                    <td className="py-2 pr-2">{appt.name}</td>
-                    <td className="py-2 pr-2">{appt.contact}</td>
+                  <tr key={String(appt.id)} className="border-b last:border-0">
+                    <td className="py-2 pr-2 font-mono">{String(appt.time)}</td>
+                    <td className="py-2 pr-2">{String(appt.name)}</td>
+                    <td className="py-2 pr-2">{String(appt.contact)}</td>
                     <td className="py-2 pr-2">
-                      {appt.payment === 'online' ? (
+                      {String(appt.payment) === 'online' ? (
                         <div className="flex items-center gap-2">
                           <span className="bg-green-600 text-white px-3 py-1 rounded font-semibold text-xs">
                             Online
                           </span>
                           <span className="text-green-600 text-xs">✓ Paid</span>
                         </div>
-                      ) : appt.payment === 'upi' ? (
+                      ) : String(appt.payment) === 'upi' ? (
                         <div className="flex items-center gap-2">
                           <span className="bg-green-600 text-white px-3 py-1 rounded font-semibold text-xs">
                             UPI
                           </span>
                           <span className="text-green-600 text-xs">✓ Paid</span>
                         </div>
-                      ) : appt.payment === 'cash' ? (
+                      ) : String(appt.payment) === 'cash' ? (
                         <div className="flex items-center gap-2">
                           <span className="bg-red-600 text-white px-3 py-1 rounded font-semibold text-xs">
                             Cash
@@ -351,7 +344,7 @@ export default function NurseDashboard() {
                           </button>
                           <span className="text-red-600 text-xs">Pending</span>
                         </div>
-                      ) : appt.payment === 'cash_collected' ? (
+                      ) : String(appt.payment) === 'cash_collected' ? (
                         <div className="flex items-center gap-2">
                           <span className="bg-green-600 text-white px-3 py-1 rounded font-semibold text-xs">
                             Cash
@@ -375,7 +368,7 @@ export default function NurseDashboard() {
                       ) : appt.payment === 'Payment lookup failed' ? (
                         <span className="text-red-500 text-xs">Payment lookup failed</span>
                       ) : (
-                        <span className="text-gray-400 text-xs">{appt.payment}</span>
+                        <span className="text-gray-400 text-xs">{String(appt.payment)}</span>
                       )}
                     </td>
                   </tr>
@@ -440,20 +433,20 @@ export default function NurseDashboard() {
                 ) : (
                   <ul className="space-y-2">
                     {closedDaysList.map(cd => (
-                      <li key={cd._id} className="flex items-center justify-between border p-2 rounded">
+                      <li key={String(cd._id)} className="flex items-center justify-between border p-2 rounded">
                         <div>
                           <div className="text-sm font-medium">
                             {cd.dateFrom && cd.dateTo
-                              ? `${new Date(cd.dateFrom).toISOString().slice(0,10)} → ${new Date(cd.dateTo).toISOString().slice(0,10)}`
+                              ? `${new Date(cd.dateFrom as string | number | Date).toISOString().slice(0,10)} → ${new Date(cd.dateTo as string | number | Date).toISOString().slice(0,10)}`
                               : cd.date
-                                ? new Date(cd.date).toISOString().slice(0,10)
+                                ? new Date(cd.date as string | number | Date).toISOString().slice(0,10)
                                 : 'Unknown date'}
-                            {' '}— {cd.branch}
+                            {' '}— {String(cd.branch)}
                           </div>
-                          <div className="text-xs text-gray-600">{cd.reason}</div>
+                          <div className="text-xs text-gray-600">{String(cd.reason)}</div>
                         </div>
                         <div>
-                          <button onClick={() => handleRemoveClosedDay(cd._id)} className="text-red-600">Remove</button>
+                          <button onClick={() => handleRemoveClosedDay(String(cd._id))} className="text-red-600">Remove</button>
                         </div>
                       </li>
                     ))}

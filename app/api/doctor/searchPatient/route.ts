@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   const client = await connectToDB();
   const db = client.db(dbName);
   const regex = new RegExp(name, 'i');
-  const results: Record<string, { name: string, visits: any[], locations: Set<string> }> = {};
+  const results: Record<string, { name: string, visits: Record<string, unknown>[], locations: Set<string> }> = {};
 
   for (const [location, collectionName] of Object.entries(locationCollections)) {
     const patients = db.collection(collectionName);

@@ -24,9 +24,9 @@ export async function GET(req: NextRequest) {
   const client = await connectToDB();
   const db = client.db(dbName);
 
-  if (branch && locationCollections[branch]) {
+  if (branch && branch in locationCollections) {
     // Return count for a specific branch
-    const count = await db.collection(locationCollections[branch]).countDocuments();
+    const count = await db.collection(locationCollections[branch as keyof typeof locationCollections]).countDocuments();
     return NextResponse.json({ branch, count });
   } else {
     // Return total and per-branch counts

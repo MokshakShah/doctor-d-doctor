@@ -4,7 +4,8 @@ import { MongoClient } from 'mongodb';
 const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const dbName = 'Patient';
 
-export async function GET(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_req: NextRequest) {
   try {
     const client = new MongoClient(uri);
     await client.connect();

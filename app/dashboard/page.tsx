@@ -27,9 +27,8 @@ export default function Dashboard() {
   const [activePatients, setActivePatients] = useState<{ total: number; perBranch: Record<string, number> } | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Record<string, unknown>[]>([]);
   const [searchDropdown, setSearchDropdown] = useState(false);
-  const [selectedPatientName, setSelectedPatientName] = useState<string | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -122,7 +121,6 @@ export default function Dashboard() {
     if (!search) {
       setSearchResults([]);
       setSearchDropdown(false);
-      setSelectedPatientName(null);
       return;
     }
     setSearchLoading(true);
@@ -180,7 +178,6 @@ export default function Dashboard() {
               value={search}
               onChange={e => {
                 setSearch(e.target.value);
-                setSelectedPatientName(null);
               }}
               className="border border-gray-300 rounded-xl px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               onFocus={() => searchResults.length > 0 && setSearchDropdown(true)}
@@ -192,9 +189,9 @@ export default function Dashboard() {
                   <div
                     key={idx}
                     className="px-4 py-2 cursor-pointer hover:bg-blue-50 text-gray-800"
-                    onClick={() => handleSelectPatientName(p.name)}
+                    onClick={() => handleSelectPatientName(String(p.name))}
                   >
-                    {p.name} <span className="text-xs text-blue-600 ml-2">{p.locations.join(', ')}</span>
+                    {String(p.name)} <span className="text-xs text-blue-600 ml-2">{(p.locations as string[]).join(', ')}</span>
                   </div>
                 ))}
               </div>

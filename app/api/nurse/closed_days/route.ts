@@ -13,7 +13,8 @@ async function connectToDB() {
   return client;
 }
 
-export async function GET(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_req: NextRequest) {
   try {
     const client = await connectToDB();
     const db = client.db(dbName);
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     const client = await connectToDB();
     const db = client.db(dbName);
     const col = db.collection('closed_days');
-    let doc: any;
+    let doc: Record<string, unknown>;
     if (dateFrom) {
       const from = new Date(dateFrom);
       const to = dateTo ? new Date(dateTo) : new Date(dateFrom);

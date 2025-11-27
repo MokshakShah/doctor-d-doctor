@@ -49,13 +49,15 @@ export async function POST(req: NextRequest) {
     // Call Gemini API to analyze the report
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `Please analyze this document and provide a comprehensive summary:
-1. Main content/findings
-2. Key data points or values mentioned
-3. Recommendations or next steps
-4. Any important notes or alerts
+    const prompt = `Analyze this hospital/lab report and provide ONLY a concise summary:
 
-Provide a clear, structured summary.`;
+- List test results with ONLY the computed values (no ranges/reference values)
+- Format: "Test Name: Value Unit"
+- Include key findings and abnormalities
+- Any critical alerts or concerns
+- Recommended next steps if any
+
+Keep it brief and structured. For lab reports, show values only, not ranges.`;
 
     const response = await model.generateContent([
       {

@@ -100,4 +100,66 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     return NextResponse.json({ error: "Failed to fetch images" }, { status: 500 });
   }
+}
+
+// DELETE: Remove a prescription image from MongoDB and Cloudinary
+export async function DELETE(req: NextRequest) {
+  try {
+    const { url, visitNo, branch } = await req.json();
+    if (!url || !visitNo || !branch) {
+      return NextResponse.json({ error: "Missing url, visitNo, or branch" }, { status: 400 });
+    }
+
+    // Extract public_id from Cloudinary URL
+    // URL format: https://res.cloudinary.com/{cloud_name}/image/upload/v{version}/{public_id}.{ext}
+    const urlParts = url.split('/');
+    const fileWithExt = urlParts[urlParts.length - 1]; // e.g., "D-D-00000001_Bor_01.jpg"
+    const publicId = fileWithExt.split('.')[0]; // Remove extension
+
+    // Delete from Cloudinary
+    const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
+    const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret) {
+      try {
+        const crypto = await import('crypto');
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = crypto
+          .createHash('sha1')
+          .update(`public_id=${publicId}&timestamp=${timestamp}${cloudinaryApiSecret}`)
+          .digest('hex');
+
+        const formData = new FormData();
+        formData.append('public_id', publicId);
+        formData.append('timestamp', timestamp.toString());
+        formData.append('api_key', cloudinaryApiKey);
+        formData.append('signature', signature);
+
+        await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/destroy`, {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (cloudinaryError) {
+        console.error('Error deleting from Cloudinary:', cloudinaryError);
+        // Continue to delete from MongoDB even if Cloudinary fails
+      }
+    }
+
+    // Delete from MongoDB
+    const client = await connectToDB();
+    const db = client.db(dbName);
+    const cloudinaryCollection = db.collection(collectionName);
+    
+    const result = await cloudinaryCollection.deleteOne({ visitNo, branch, url });
+    
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Image not found in database" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: "Image deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    return NextResponse.json({ error: "Failed to delete image" }, { status: 500 });
+  }
 } 

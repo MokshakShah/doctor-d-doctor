@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function AddPrescriptionImage() {
   const router = useRouter();
@@ -13,6 +14,15 @@ export default function AddPrescriptionImage() {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  // Manage images state
+  const [manageVisitNo, setManageVisitNo] = useState("");
+  const [manageBranch, setManageBranch] = useState("");
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [deletingUrl, setDeletingUrl] = useState<string | null>(null);
+  const [manageError, setManageError] = useState("");
+  const [manageSuccess, setManageSuccess] = useState("");
 
   // TODO: Replace with your Cloudinary upload preset and cloud name
   const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
@@ -217,6 +227,112 @@ export default function AddPrescriptionImage() {
         >
           Back to Dashboard
         </button>
+      </div>
+
+      {/* Manage/Delete Images Section */}
+      <div className="w-full max-w-md bg-white rounded-xl shadow p-6 border border-orange-200 mt-6">
+        <h2 className="text-lg font-bold text-orange-800 mb-4 text-center">🗑️ Manage / Delete Images</h2>
+        <div className="flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="Visit Number"
+            className="border rounded px-3 py-2"
+            value={manageVisitNo}
+            onChange={e => setManageVisitNo(e.target.value)}
+          />
+          <select
+            className="border rounded px-3 py-2"
+            value={manageBranch}
+            onChange={e => setManageBranch(e.target.value)}
+          >
+            <option value="">Select Branch</option>
+            {branchOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="w-full bg-orange-600 text-white py-2 rounded-lg font-semibold"
+            onClick={async () => {
+              if (!manageVisitNo || !manageBranch) {
+                setManageError("Please enter visit number and select branch");
+                return;
+              }
+              setManageError("");
+              setManageSuccess("");
+              setLoadingImages(true);
+              try {
+                const res = await fetch(`/api/nurse/prescription_img?visitNo=${encodeURIComponent(manageVisitNo)}&branch=${encodeURIComponent(manageBranch)}`);
+                const data = await res.json();
+                setExistingImages(data.images || []);
+                if ((data.images || []).length === 0) {
+                  setManageError("No images found for this patient");
+                }
+              } catch {
+                setManageError("Failed to fetch images");
+              } finally {
+                setLoadingImages(false);
+              }
+            }}
+            disabled={loadingImages}
+          >
+            {loadingImages ? "Loading..." : "Load Images"}
+          </button>
+
+          {manageError && <div className="text-red-500 text-center text-sm">{manageError}</div>}
+          {manageSuccess && <div className="text-green-600 text-center text-sm">{manageSuccess}</div>}
+
+          {existingImages.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600 mb-2">Click the ❌ to delete an image:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {existingImages.map((url, idx) => (
+                  <div key={idx} className="relative border rounded-lg p-2 bg-gray-50">
+                    <Image
+                      src={url}
+                      alt={`Prescription ${idx + 1}`}
+                      width={150}
+                      height={150}
+                      className="rounded object-contain w-full h-32"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.png'; }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold hover:bg-red-700 disabled:opacity-50"
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to delete this image?")) return;
+                        setDeletingUrl(url);
+                        setManageError("");
+                        setManageSuccess("");
+                        try {
+                          const res = await fetch("/api/nurse/prescription_img", {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ url, visitNo: manageVisitNo, branch: manageBranch }),
+                          });
+                          if (res.ok) {
+                            setExistingImages(prev => prev.filter(u => u !== url));
+                            setManageSuccess("Image deleted successfully!");
+                          } else {
+                            const data = await res.json();
+                            setManageError(data.error || "Failed to delete image");
+                          }
+                        } catch {
+                          setManageError("Failed to delete image");
+                        } finally {
+                          setDeletingUrl(null);
+                        }
+                      }}
+                      disabled={deletingUrl === url}
+                    >
+                      {deletingUrl === url ? "..." : "❌"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

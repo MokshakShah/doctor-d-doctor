@@ -49,15 +49,22 @@ export async function POST(req: NextRequest) {
     // Call Gemini API to analyze the report
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = `Analyze this hospital/lab report and provide ONLY a concise summary:
+    const prompt = `Extract ONLY the measured/calculated values from this lab report. Be very concise.
 
-- List test results with ONLY the computed values (no ranges/reference values)
-- Format: "Test Name: Value Unit"
-- Include key findings and abnormalities
-- Any critical alerts or concerns
-- Recommended next steps if any
+Format each test as: TestName: Value Unit
 
-Keep it brief and structured. For lab reports, show values only, not ranges.`;
+Example:
+- Fasting Glucose: 98 mg/dL
+- Post-Meal Glucose: 142 mg/dL
+- HbA1c: 6.2%
+- TSH: 3.5 mIU/L
+
+Rules:
+- Show ONLY the patient's actual test values
+- Do NOT include normal ranges or reference values
+- Highlight any abnormal values with (High) or (Low)
+- Skip test descriptions, just values
+- Maximum 15 lines`;
 
     const response = await model.generateContent([
       {
@@ -139,11 +146,10 @@ export async function GET(req: NextRequest) {
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
-    // Get last 3 report analyses
+    // Get all report analyses (with _id for deletion)
     const analyses = await collection
       .find({ visitNo, branch })
       .sort({ uploadedAt: -1 })
-      .limit(3)
       .toArray();
 
     return NextResponse.json({ analyses });
@@ -151,6 +157,46 @@ export async function GET(req: NextRequest) {
   } catch (_error: unknown) {
     return NextResponse.json(
       { error: "Failed to fetch analyses" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Remove a report analysis from MongoDB
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id, visitNo, branch } = await req.json();
+    
+    if (!id || !visitNo || !branch) {
+      return NextResponse.json(
+        { error: "Missing id, visitNo, or branch" },
+        { status: 400 }
+      );
+    }
+
+    const client = await connectToDB();
+    const db = client.db(dbName);
+    const collection = db.collection(collectionName);
+
+    const { ObjectId } = await import('mongodb');
+    const result = await collection.deleteOne({ 
+      _id: new ObjectId(id), 
+      visitNo, 
+      branch 
+    });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { error: "Report not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: "Report deleted successfully" });
+  } catch (error) {
+    console.error('Error deleting report:', error);
+    return NextResponse.json(
+      { error: "Failed to delete report" },
       { status: 500 }
     );
   }

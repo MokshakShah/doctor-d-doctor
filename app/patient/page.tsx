@@ -147,15 +147,15 @@ function PatientPageContent() {
   }, [loading, patients]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex flex-col items-center p-4">
-      <div className="w-full max-w-2xl mt-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 p-6">
+      <div className="max-w-7xl mx-auto">
         <button
           className="mb-4 text-blue-600 hover:underline font-medium"
           onClick={() => router.back()}
         >
           ← Back to Dashboard
         </button>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 text-center">Patient Details</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">Patient Details</h1>
         {loading ? (
           <div className="flex items-center justify-center h-24">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -163,7 +163,7 @@ function PatientPageContent() {
         ) : patients.length === 0 ? (
           <div className="text-gray-500 text-center">No patient found with this name.</div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-8">
             {patients.map((patient, idx) => {
               const latestVisit = getLatestPastVisit(patient.visits);
               // If no previous visit, use the earliest visit as 'first visit'
@@ -178,141 +178,150 @@ function PatientPageContent() {
                 isFirstVisit = true;
               }
               return (
-                <div key={idx} className="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-blue-100">
+                <div key={idx} className="bg-white rounded-2xl shadow-lg p-8 border border-blue-100">
                   {/* Header with avatar and locations */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-full bg-blue-200 flex items-center justify-center text-2xl font-bold text-blue-700 shadow">
-                        {getInitials(patient.name)}
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold text-blue-800">{patient.name}</div>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {(patient.locations || []).map((loc: string) => (
-                            <span key={loc} className="text-xs bg-blue-100 text-blue-700 rounded px-2 py-1 font-semibold">
-                              {loc}
-                            </span>
-                          ))}
-                        </div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 rounded-full bg-blue-200 flex items-center justify-center text-2xl font-bold text-blue-700 shadow">
+                      {getInitials(patient.name)}
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-blue-800">{patient.name}</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {(patient.locations || []).map((loc: string) => (
+                          <span key={loc} className="text-xs bg-blue-100 text-blue-700 rounded px-2 py-1 font-semibold">
+                            {loc}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
                   {/* Patient summary or first visit */}
                   {showVisit ? (
-                    <div className="flex flex-col gap-2 sm:flex-row sm:gap-8">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <Calendar className="w-4 h-4 text-blue-400" />
-                          <span>{isFirstVisit ? 'First Visit:' : 'Last Visit:'}</span>
-                          <span className="font-semibold text-gray-900">{showVisit.appointments?.[0]?.date || '-'}</span>
+                    <>
+                    <div className="flex flex-col lg:flex-row gap-8">
+                      {/* Left Column: Patient Info + Prescription */}
+                      <div className="lg:w-1/4 flex flex-col gap-6">
+                        {/* Patient Details */}
+                        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                          <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2 text-lg">Patient Information</h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <Calendar className="w-4 h-4 text-blue-400" />
+                              <span>{isFirstVisit ? 'First Visit:' : 'Last Visit:'}</span>
+                              <span className="font-semibold text-gray-900">{showVisit.appointments?.[0]?.date || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <User className="w-4 h-4 text-blue-400" />
+                              <span>Age:</span>
+                              <span className="font-semibold text-gray-900">{showVisit.age || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              {showVisit.gender === 'Male' ? <Mars className="w-4 h-4 text-blue-400" /> : <Venus className="w-4 h-4 text-pink-400" />}
+                              <span>Gender:</span>
+                              <span className="font-semibold text-gray-900">{showVisit.gender || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <FileText className="w-4 h-4 text-blue-400" />
+                              <span>Medical History:</span>
+                              <span className="font-semibold text-gray-900">{showVisit.medicalConditions || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <FileText className="w-4 h-4 text-blue-400" />
+                              <span>Allergies:</span>
+                              <span className="font-semibold text-gray-900">{showVisit.allergy || '-'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                              <FileText className="w-4 h-4 text-blue-400" />
+                              <span>Family History:</span>
+                              <span className="font-semibold text-gray-900">{showVisit.familyHistory || '-'}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <User className="w-4 h-4 text-blue-400" />
-                          <span>Age:</span>
-                          <span className="font-semibold text-gray-900">{showVisit.age || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          {showVisit.gender === 'Male' ? <Mars className="w-4 h-4 text-blue-400" /> : <Venus className="w-4 h-4 text-pink-400" />}
-                          <span>Gender:</span>
-                          <span className="font-semibold text-gray-900">{showVisit.gender || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <FileText className="w-4 h-4 text-blue-400" />
-                          <span>Medical History:</span>
-                          <span className="font-semibold text-gray-900">{showVisit.medicalConditions || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <FileText className="w-4 h-4 text-blue-400" />
-                          <span>Allergies:</span>
-                          <span className="font-semibold text-gray-900">{showVisit.allergy || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                          <FileText className="w-4 h-4 text-blue-400" />
-                          <span>Family History:</span>
-                          <span className="font-semibold text-gray-900">{showVisit.familyHistory || '-'}</span>
-                        </div>
-                      </div>
-                      {/* Prescription card */}
-                      <div className="flex-1 flex flex-col items-center justify-center">
+                        
                         {/* Prescription Card */}
-                        <div className="w-full max-w-xs bg-blue-50 rounded-xl p-4 flex flex-col items-center border border-blue-200 shadow mb-4">
-                          <div className="font-semibold text-blue-700 mb-2">Prescription</div>
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 shadow">
+                          <div className="font-semibold text-blue-700 mb-3 border-b border-blue-200 pb-2">💊 Prescription</div>
                           {prescriptionImages.length > 0 ? (
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-wrap gap-2 justify-center">
                               {prescriptionImages.map((url, idx) => (
                                 <Image
                                   key={idx}
                                   src={url}
                                   alt={`Prescription ${idx + 1}`}
-                                  width={200}
-                                  height={200}
-                                  className="rounded-lg max-h-48 object-contain border cursor-pointer"
+                                  width={120}
+                                  height={120}
+                                  className="rounded-lg max-h-32 object-contain border cursor-pointer hover:scale-105 transition-transform"
                                   onClick={() => { setModalImg(url); setModalOpen(true); }}
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                 />
                               ))}
                             </div>
                           ) : (
-                            <div className="text-gray-400 italic">No prescription uploaded</div>
+                            <div className="text-gray-400 italic text-center py-6">No prescription uploaded</div>
                           )}
                         </div>
-                        {/* Reports Card */}
-                        <div className="w-full max-w-xs bg-purple-50 rounded-xl p-4 flex flex-col items-center border border-purple-200 shadow">
-                          <div className="font-semibold text-purple-700 mb-2">📋 Report Analysis</div>
+                      </div>
+                      
+                      {/* Right Column: Reports (3/4 width) */}
+                      <div className="lg:w-3/4">
+                        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200 shadow h-full">
+                          <div className="font-semibold text-purple-700 mb-4 border-b border-purple-200 pb-2 text-lg">📋 Report Analysis</div>
                           {reportsLoading ? (
-                            <div className="flex items-center justify-center h-24">
+                            <div className="flex items-center justify-center h-32">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
                             </div>
                           ) : reportUrls.length > 0 ? (
-                            <div className="flex flex-col gap-3 w-full">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-5">
                               {reportUrls.map((analysis: ReportAnalysis, idx) => (
-                                <div key={idx} className="bg-white border border-purple-200 rounded-lg p-3">
-                                  <div className="text-xs font-semibold text-purple-600 mb-2">
-                                    {new Date(analysis.uploadedAt).toLocaleDateString()} - {analysis.fileName}
+                                <div key={idx} className="bg-white border border-purple-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+                                  <div className="text-sm font-semibold text-purple-600 mb-3 flex items-center gap-2">
+                                    <span className="bg-purple-100 px-3 py-1 rounded-full">{new Date(analysis.uploadedAt).toLocaleDateString('en-GB')}</span>
                                   </div>
-                                  <div className="text-sm text-purple-900 whitespace-pre-wrap max-h-48 overflow-y-auto bg-purple-50 p-2 rounded">
+                                  <div className="text-sm text-purple-900 whitespace-pre-wrap bg-purple-50 p-4 rounded max-h-72 overflow-y-auto">
                                     {analysis.analysis}
                                   </div>
                                   {analysis.note && (
-                                    <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-purple-200">
-                                      <strong>Note:</strong> {analysis.note}
+                                    <div className="text-xs text-gray-600 mt-3 pt-2 border-t border-purple-200 bg-yellow-50 p-2 rounded">
+                                      <strong>📝 Note:</strong> {analysis.note}
                                     </div>
                                   )}
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-gray-400 italic">No reports analyzed yet</div>
+                            <div className="text-gray-400 italic text-center py-8">No reports analyzed yet</div>
                           )}
                         </div>
-                        {/* Modal for full-size prescription image preview */}
-                        {modalOpen && modalImg && (
-                          <div
-                            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
-                            onClick={() => setModalOpen(false)}
-                          >
-                            <div
-                              className="bg-white rounded-lg p-4 max-w-3xl max-h-[90vh] flex flex-col items-center relative"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <button
-                                className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-2xl font-bold"
-                                onClick={() => setModalOpen(false)}
-                                aria-label="Close"
-                              >
-                                ×
-                              </button>
-                              <Image
-                                src={modalImg || ""}
-                                alt="Prescription Preview"
-                                width={800}
-                                height={600}
-                                className="rounded-lg object-contain max-h-[80vh] max-w-full"
-                              />
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
+                    {/* Modal for full-size prescription image preview */}
+                    {modalOpen && modalImg && (
+                      <div
+                        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+                        onClick={() => setModalOpen(false)}
+                      >
+                        <div
+                          className="bg-white rounded-lg p-4 max-w-3xl max-h-[90vh] flex flex-col items-center relative"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <button
+                            className="absolute top-2 right-2 text-gray-600 hover:text-red-500 text-2xl font-bold"
+                            onClick={() => setModalOpen(false)}
+                            aria-label="Close"
+                          >
+                            ×
+                          </button>
+                          <Image
+                            src={modalImg || ""}
+                            alt="Prescription Preview"
+                            width={800}
+                            height={600}
+                            className="rounded-lg object-contain max-h-[80vh] max-w-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
                   ) : (
                     <div className="text-center text-gray-500 italic py-8">
                       No previous visits found for this patient.

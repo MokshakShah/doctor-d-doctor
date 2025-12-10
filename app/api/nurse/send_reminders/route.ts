@@ -77,10 +77,16 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
+      // Format contact for Twilio (India)
+      let twilioTo = String(to).replace(/\s+/g, '');
+      if (/^\d{10}$/.test(twilioTo)) {
+        twilioTo = '+91' + twilioTo;
+      }
+
       try {
         const body = new URLSearchParams();
         const appointmentDateStr = (f.nextAppointmentDate instanceof Date) ? f.nextAppointmentDate.toISOString().slice(0,10) : (new Date(f.nextAppointmentDate)).toISOString().slice(0,10);
-        body.append('To', to);
+        body.append('To', twilioTo);
         body.append('From', fromNumber);
         body.append('Body', `Reminder: You have an upcoming appointment on ${appointmentDateStr}. Please attend or call to reschedule.`);
 

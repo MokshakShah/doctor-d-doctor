@@ -29,7 +29,10 @@ export async function POST(req: NextRequest) {
     const followups = db.collection('followups');
 
     const now = new Date();
-    const due = await followups.find({ remindAt: { $lte: now }, sentAt: null }).toArray();
+    // Only send reminders where remindAt is today (ignoring time)
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const due = await followups.find({ remindAt: { $gte: start, $lt: end }, sentAt: null }).toArray();
 
     if (due.length === 0) return NextResponse.json({ sent: 0, message: 'No reminders due' });
 

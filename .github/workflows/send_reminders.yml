@@ -1,30 +1,30 @@
-name: Send appointment reminders
+# name: Send appointment reminders
 
-on:
-  # Disabled - uncomment schedule to enable daily reminders
-  # schedule:
-  #   # Runs daily at 07:00 UTC (12:30 PM IST)
-  #   - cron: '0 7 * * *'
-  workflow_dispatch: {}  # Can still be triggered manually
+# on:
+#   # Disabled - uncomment schedule to enable daily reminders
+#   # schedule:
+#   #   # Runs daily at 07:00 UTC (12:30 PM IST)
+#   #   - cron: '0 7 * * *'
+#   workflow_dispatch: {}  # Can still be triggered manually
 
-jobs:
-  send-reminders:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Call reminders endpoint
-        env:
-          REMINDERS_URL: ${{ secrets.REMINDERS_URL }}
-          REMINDER_TOKEN: ${{ secrets.REMINDER_TOKEN }}
-        run: |
-          if [ -z "$REMINDERS_URL" ]; then
-            echo "REMINDERS_URL secret is not set. Skipping reminders."
-            echo "To enable: Add REMINDERS_URL and REMINDER_TOKEN in GitHub repo secrets."
-            exit 0
-          fi
-          echo "Calling reminders endpoint..."
-          HTTP_STATUS=$(curl -s -o /tmp/reminders_response.json -w "%{http_code}" -X POST "$REMINDERS_URL" -H "x-reminder-token: $REMINDER_TOKEN")
-          echo "HTTP status: $HTTP_STATUS"
-          echo "Response:"; cat /tmp/reminders_response.json
-          if [ "$HTTP_STATUS" -ge 400 ]; then
-            echo "Reminders endpoint returned error"; exit 1;
-          fi
+# jobs:
+#   send-reminders:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Call reminders endpoint
+#         env:
+#           REMINDERS_URL: ${{ secrets.REMINDERS_URL }}
+#           REMINDER_TOKEN: ${{ secrets.REMINDER_TOKEN }}
+#         run: |
+#           if [ -z "$REMINDERS_URL" ]; then
+#             echo "REMINDERS_URL secret is not set. Skipping reminders."
+#             echo "To enable: Add REMINDERS_URL and REMINDER_TOKEN in GitHub repo secrets."
+#             exit 0
+#           fi
+#           echo "Calling reminders endpoint..."
+#           HTTP_STATUS=$(curl -s -o /tmp/reminders_response.json -w "%{http_code}" -X POST "$REMINDERS_URL" -H "x-reminder-token: $REMINDER_TOKEN")
+#           echo "HTTP status: $HTTP_STATUS"
+#           echo "Response:"; cat /tmp/reminders_response.json
+#           if [ "$HTTP_STATUS" -ge 400 ]; then
+#             echo "Reminders endpoint returned error"; exit 1;
+#           fi

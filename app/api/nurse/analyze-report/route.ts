@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Call Gemini API to analyze the report
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `Extract ONLY the measured/calculated values from this lab report. Be very concise.
 
